@@ -50,7 +50,7 @@ $TTL {{ dns_ttl_interval }}
 {% endfor %}
 {% endif %}
 
-{% if item.hosts is defined %}
+{% if item.text is defined %}
 ; TXT records
 {% for text in item.text %}
 {{ text.name.ljust(20) }} IN TXT {{ text.value }}

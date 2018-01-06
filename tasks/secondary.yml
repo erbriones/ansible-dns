@@ -1,0 +1,11 @@
+---
+- name: Copy Secondary configuration
+  template:
+    src: secondary_etc_named.conf.j2
+    dest: /etc/named.conf
+    owner: named
+    group: named
+    mode: '0640'
+    setype: named_conf_t
+    validate: 'named-checkconf %s'
+  notify: restart named

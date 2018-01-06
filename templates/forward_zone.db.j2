@@ -1,0 +1,58 @@
+{% set domain = item.name %}
+{% set hostmaster = item.email %}
+$TTL {{ dns_ttl_interval }}
+@       IN      SOA     {{ groups.dns[0] }}.{{ domain }}. {{ hostmaster }}. (
+        {{ "%d\t" |format(dns_serial_number|int) }}; Serial
+        {{ "%d\t" |format(dns_refresh_interval|int) }}; Refresh
+        {{ "%d\t" |format(dns_retry_interval|int) }}; Retry
+        {{ "%d\t" |format(dns_expiration_interval|int) }}; Expire
+        {{ "%d\t" |format(dns_ttl_interval|int) }}; Minimum TTL
+        )
+
+; Name servers
+{% for ns in groups.dns %}
+@    IN  NS      {{ ns }}.{{ domain }}.
+{% endfor %}
+
+{% for ns in groups.dns %}
+{{ ns }} IN  A  {{ hostvars[ns]["ansible_default_ipv4"]["address"] }}
+{% endfor %}
+
+{% if item.hosts is defined %}
+; A records
+{% for host in item.hosts %}
+{{ host.name.ljust(20) }} IN  A {{ host.address }}
+{% endfor %}
+{% endif %}
+
+{% if item.hosts is defined %}
+; CNAME records
+{% for host in item.hosts %}
+{% if host.aliases is defined %}
+{% for alias in host.aliases %}
+{{ alias.ljust(20) }} IN CNAME {{ host.name }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if item.mail is defined %}
+; MX records
+{% for mail in item.mail %}
+{% if loop.first %}@{% endif %} MX {{ mx.preference | default("0") }} {{ mail.exchange }}.
+{% endfor %}
+{% endif %}
+
+{% if item.services is defined %}
+; SRV records
+{% for service in item.services %}
+{{ service.name.ljust(20) }} IN  SRV  {{ service.priority | default("0") }}  {{ service.weight|default("0") }} {{service.port }} {{ service.target }}
+{% endfor %}
+{% endif %}
+
+{% if item.hosts is defined %}
+; TXT records
+{% for text in item.text %}
+{{ text.name.ljust(20) }} IN TXT {{ text.value }}
+{% endfor %}
+{% endif %}

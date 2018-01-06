@@ -1,0 +1,71 @@
+---
+# tasks file for ansible-dns
+- name: Install bind
+  yum: name=bind-chroot state=present
+
+- name: Create zone directory
+  file: path=/var/named/zones state=directory mode=0755 owner=named group=named
+
+- name: Create timestamp for use as a serial number
+  raw: date +%s
+  register: timestamp
+  changed_when: false
+  run_once: true
+
+- name: Set timestamp as dns_serial_number
+  set_fact:
+    dns_serial_number: "{{ timestamp.stdout | trim | int }}"
+
+- name: Copy default zone
+  copy:
+    src: default.zone
+    dest: /etc/named.default
+    owner: named
+    group: named
+    mode: '0640'
+    setype: named_conf_t
+    validate: 'named-checkconf %s'
+  notify: restart named
+
+- name: Setup primary node
+  include: primary.yml
+  when: ansible_hostname == dns_primary_node
+
+- name: Setup secondary nodes
+  include: secondary.yml
+  when: ansible_hostname != dns_primary_node
+
+- name: Add DNS (named) UFW application profile
+  copy:
+      src: ufw-dns
+      dest: /etc/ufw/applications.d/ufw-dns
+
+- name: Enable DNS (named) UFW profile
+  ufw: rule={{ dns_ufw_rule }} name=DNS
+
+- name: Copy forward zone files
+  template:
+    src: forward_zone.db.j2
+    dest: /var/named/zones/{{ item.name }}.db
+    owner: named
+    group: named
+    mode: '0640'
+    setype: named_zone_t
+    validate: 'named-checkzone -d {{ item.name }} %s'
+  with_items: "{{ dns_zones }}"
+  notify: restart named
+
+- name: Copy reverse zone files
+  template:
+    src: reverse_zone.db.j2
+    dest: /var/named/zones/{{ item.network }}.db
+    owner: named
+    group: named
+    mode: '0640'
+    setype: named_zone_t
+    validate: 'named-checkzone -d {{ item.network }}.in-addr.arpa %s'
+  with_items: "{{ dns_zones }}"
+  notify: restart named
+
+- name: Start named service
+  systemd: name=named.service state=started enabled=True

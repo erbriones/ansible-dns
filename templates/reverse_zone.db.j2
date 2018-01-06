@@ -1,0 +1,30 @@
+{% set domain = item.name %}
+{% set hostmaster = item.email %}
+{% set network = item.network %}
+$TTL {{ dns_ttl_interval }}
+@       IN      SOA     {{ groups.dns[0] }}.{{ domain }}. {{ hostmaster }}. (
+        {{ "%10d\t" |format(dns_serial_number|int) }}; Serial
+        {{ "%10d\t" |format(dns_refresh_interval|int) }}; Refresh
+        {{ "%10d\t" |format(dns_retry_interval|int) }}; Retry
+        {{ "%10d\t" |format(dns_expiration_interval|int) }}; Expire
+        {{ "%10d\t" |format(dns_ttl_interval|int) }}; Minimum TTL
+        )
+
+; Name servers
+{% for ns in groups.dns %}
+@    IN  NS      {{ ns }}.{{ domain }}.
+{% endfor %}
+
+{% for ns in groups.dns %}
+{% set addr = hostvars[ns]["ansible_default_ipv4"]["address"] %}
+{{ (".".join(addr.replace(network, "").split(".")[::-1]).rstrip(".")) }} IN PTR {{ ns }}.{{ domain }}. ; {{ addr }}
+{% endfor %}
+
+{% if item.hosts is defined %}
+; PTR records
+{% for host in item.hosts %}
+{% if host.address.startswith(network) %}
+{{ (".".join(host.address.replace(network, "").split(".")[::-1]).rstrip(".")) }} IN  PTR {{ host.name }}.{{ domain }}. ; {{ host.address }}
+{% endif %}
+{% endfor %}
+{% endif %}

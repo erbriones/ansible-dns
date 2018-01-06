@@ -1,0 +1,29 @@
+---
+dns_acls: []
+dns_keys: []
+
+dns_listen_ipv4:
+    - localhost
+
+dns_allowed_transfer: []
+dns_allowed_query: []
+dns_allowed_recursion: []
+
+dns_forward: first
+dns_forwarders: []
+
+dns_dnssec_enabled: yes
+dns_dnssec_validation: yes
+
+dns_rrset_ordering: random
+
+dns_include_default_files:
+    - /etc/named.default
+    - /etc/named.rfc1912.zones
+    - /etc/named.root.key
+
+dns_refresh_interval: 3600
+dns_retry_interval: 1800
+dns_expiration_interval: 604800
+dns_ttl_interval: 86400
+dns_ufw_rule: allow

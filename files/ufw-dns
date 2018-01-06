@@ -1,0 +1,4 @@
+[DNS]
+title=DNS Server
+description=Domain Name Server
+ports=53/udp,953/tcp

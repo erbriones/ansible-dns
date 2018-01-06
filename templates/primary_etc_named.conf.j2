@@ -1,0 +1,133 @@
+// ACL used by other processes
+{% for acl in dns_acls -%}
+acl "{{ acl.name }}" {
+    {{ acl.targets | join("; ") }};
+};
+{% endfor -%}
+
+// Keys
+{% for key in dns_keys -%}
+key "{{ key.name }}" {
+    algorithm {{ key.algorithm }};
+    secret "{{ key.secret }}";
+};
+{% endfor -%}
+
+// Logging configuration
+logging {
+    channel default_debug {
+        file "data/named.run";
+        severity dynamic;
+        print-severity yes;
+        print-time yes;
+    };
+};
+
+options {
+    listen-on port 53 {
+        {{ dns_listen_ipv4|join('; ') }};
+    };
+
+    directory   "/var/named";
+    dump-file   "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+
+    /* Path to ISC DLV key */
+    managed-keys-directory "/var/named/dynamic";
+    bindkeys-file "/etc/named.iscdlv.key";
+
+    {% if dns_allowed_query|length != 0 -%}
+    // Hosts allowed to query the server
+    allow-query {
+        {{ dns_allowed_query | join ("; ") }};
+    };
+    {% endif -%}
+
+    {% if dns_allowed_transfer|length != 0 -%}
+    // Hosts allowed to copy zone information
+    allow-transfer {
+        {{ dns_allowed_transfer | join("; ") }};
+    };
+    {% endif -%}
+
+    {% if dns_forwarders|length != 0 -%}
+    // Hosts that queries are forwarded to
+    forward {{ dns_forward }};
+
+    forwarders {
+        {{ dns_forwarders | join("; ") }};
+    };
+    {% endif -%}
+
+    // Recursion
+    {% if dns_allowed_recursion|length != 0 -%}
+    recursion yes;
+    allow-recursion {
+        {{ dns_allowed_recursion|join('; ') }};
+    };
+    {% else -%}
+    recursion no;
+    {% endif -%}
+
+    // DNSSEC
+    dnssec-enable {{ dns_dnssec_enabled }};
+    dnssec-validation {{ dns_dnssec_validation }};
+    dnssec-lookaside auto;
+
+    // Global method for ordering result records
+    rrset-order {
+        order {{ dns_rrset_ordering }};
+    };
+};
+
+// Forward zones
+{% for zone in dns_zones -%}
+zone "{{ zone.name }}" {
+    {% if zone.also_notify is defined and zone.also_notify|length != 0 -%}
+    // Restrict notification to only the 'also-notify' list
+    notify explicit;
+    also-notify  {
+        {{ zone.also_notify|join("; ") }};
+    };
+    {% endif -%}
+
+    {% if zone.allow_update is defined and zone.allow_update|length != 0 -%}
+    // Allow update
+    allow-update {
+        {{ zone.allow_update|join ("; ") }};
+    };
+    {% endif -%}
+
+    type master;
+    file "zones/{{ zone.name }}.db";
+};
+{% endfor %}
+
+// Reverse zones
+{% for zone in dns_zones -%}
+zone "{{ zone.network }}-in-addr.arpa." {
+    {% if zone.also_notify is defined and zone.also_notify|length != 0 -%}
+    // Restrict notification to only the 'also-notify' list
+    notify explicit;
+    also-notify  {
+        {{ zone.also_notify|join("; ") }};
+    };
+    {% endif -%}
+
+    {% if zone.allow_update is defined and zone.allow_update|length != 0 -%}
+    // Allow update
+    allow-update {
+        {{ zone.allow_update|join ("; ") }};
+    };
+    {% endif -%}
+
+    type master;
+    file "zones/{{ zone.network }}.db";
+};
+{% endfor %}
+
+// default configuration
+{% for path in dns_include_default_files %}
+include "{{ path }}";
+{% endfor -%}

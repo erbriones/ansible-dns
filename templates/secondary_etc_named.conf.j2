@@ -95,7 +95,7 @@ zone "{{ zone.name }}" {
 
 // Reverse zones
 {% for zone in dns_zones -%}
-zone "{{ zone.network }}-in-addr.arpa." {
+zone "{{ zone.network }}.in-addr.arpa." {
     masters {
         {{ dns_master_address }};
     };

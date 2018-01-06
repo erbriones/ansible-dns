@@ -62,18 +62,18 @@ options {
     {% endif -%}
 
     // Recursion
-    {% if dns_allowed_recursion|length != 0 -%}
+    {% if dns_recursion_enabled and dns_allowed_recursion|length != 0 -%}
     recursion yes;
     allow-recursion {
         {{ dns_allowed_recursion|join('; ') }};
     };
     {% else -%}
-    recursion no;
+    recursion {% if dns_recursion_enabled %}yes{% else %}no{% endif %};
     {% endif -%}
 
     // DNSSEC
-    dnssec-enable {{ dns_dnssec_enabled }};
-    dnssec-validation {{ dns_dnssec_validation }};
+    dnssec-enable {% if dns_dnssec_enabled %}yes{% else %}no{% endif %};
+    dnssec-validation {% if dns_dnssec_validation %}yes{% else %}no{% endif %};
     dnssec-lookaside auto;
 
     // Global method for ordering result records

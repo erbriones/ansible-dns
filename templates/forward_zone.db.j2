@@ -30,7 +30,7 @@ $TTL {{ dns_ttl_interval }}
 {% for host in item.hosts %}
 {% if host.aliases is defined %}
 {% for alias in host.aliases %}
-{{ alias.ljust(20) }} IN CNAME {{ host.name }}
+{{ alias.ljust(20) }} IN CNAME {{ host.name }}.{{ domain }}.
 {% endfor %}
 {% endif %}
 {% endfor %}

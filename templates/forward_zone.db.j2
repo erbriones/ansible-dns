@@ -46,7 +46,7 @@ $TTL {{ dns_ttl_interval }}
 {% if item.services is defined %}
 ; SRV records
 {% for service in item.services %}
-{{ service.name.ljust(20) }} IN  SRV  {{ service.priority | default("0") }}  {{ service.weight|default("0") }} {{service.port }} {{ service.target }}
+{{ service.name.ljust(20) }} IN  SRV  {{ service.priority | default("0") }}  {{ service.weight|default("0") }} {{ service.port }} {{ service.target }}
 {% endfor %}
 {% endif %}
 

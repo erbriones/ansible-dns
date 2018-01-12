@@ -6,4 +6,4 @@ An Ansible role for setting up and configuring dns (bind).
 
 # License
 
-The MIT License. See the LICENSE file.
+The MIT License. See the [LICENSE file](https://github.com/erbriones/ansible-dns/blob/master/LICENSE).

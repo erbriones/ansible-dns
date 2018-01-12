@@ -39,7 +39,7 @@ $TTL {{ dns_ttl_interval }}
 {% if item.mail is defined %}
 ; MX records
 {% for mail in item.mail %}
-{% if loop.first %}@{% endif %} MX {{ mx.preference | default("0") }} {{ mail.exchange }}.
+{% if loop.first %}@{% endif %} IN MX {{ mx.preference | default("0") }} {{ mail.exchange }}.
 {% endfor %}
 {% endif %}
 

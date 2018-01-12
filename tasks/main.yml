@@ -44,7 +44,7 @@
   ufw: rule={{ dns_ufw_rule }} name=DNS
 
 - name: Add RNDC UFW rule
-  ufw: rule={{ dns_rndc_ufw_rule }} name=DNS
+  ufw: rule={{ dns_rndc_ufw_rule }} name=RNDC
 
 - name: Copy forward zone files
   template:

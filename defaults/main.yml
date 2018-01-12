@@ -29,3 +29,4 @@ dns_retry_interval: 1800
 dns_expiration_interval: 604800
 dns_ttl_interval: 86400
 dns_ufw_rule: allow
+dns_rndc_ufw_rule: allow

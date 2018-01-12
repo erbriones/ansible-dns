@@ -40,8 +40,11 @@
       src: ufw-dns
       dest: /etc/ufw/applications.d/ufw-dns
 
-- name: Enable DNS (named) UFW profile
+- name: Add DNS (named) UFW rule
   ufw: rule={{ dns_ufw_rule }} name=DNS
+
+- name: Add RNDC UFW rule
+  ufw: rule={{ dns_rndc_ufw_rule }} name=DNS
 
 - name: Copy forward zone files
   template:
